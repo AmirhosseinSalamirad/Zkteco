@@ -11,7 +11,6 @@ class DB:
 		self._create_devices_table()
 		self._create_attendances_table()
 	
-	
 	def _create_attendances_table(self):
 		self.cursor.execute("""CREATE TABLE IF NOT EXISTS attendances
 							(
@@ -49,7 +48,7 @@ class DB:
 	def get_device(self, id):
 		return self.cursor.execute(f"SELECT * From devices WHERE id is '{id}'").fetchone()
 	
-	def add_devices(self, ip, port, sn, password, timeout, odoo_endpoint,location):
+	def add_devices(self, ip, port, sn, password, timeout, odoo_endpoint, location):
 		self.cursor.execute("INSERT INTO devices(ip, port, serial_number, password, timeout,odoo_endpoint, location) VALUES (?, ?, ?, ?, ?,?, ?)", (ip, port, sn, password, timeout, odoo_endpoint, location))
 		self.connection.commit()
 	
@@ -86,53 +85,26 @@ class DB:
 		self.connection.commit()
 	
 	def upload(self, id, batch):
-		if id:
-			device = self.cursor.execute(f"SELECT * From devices WHERE id is '{id}'").fetchone()
-			odoo_address = device[6]
-			
-			not_sent_attendances = self.cursor.execute(f"SELECT * From attendances WHERE is_sent is FALSE").fetchall()
-	
-			while len(not_sent_attendances) > batch:
-				ready_for_upload = not_sent_attendances[:batch]
-				not_sent_attendances = not_sent_attendances[batch:]
-				
-				
-				data = {'attendances': ready_for_upload, "serial_number": device[3]}
-				data = json.dumps(data)
-				headers = {'content-type': 'application/json'}
-				response = requests.post(odoo_address, data=data, headers=headers)
-				
-				if response.status_code == 200:
-	
-					# TODO: Bulk update
-					for i in ready_for_upload:
-						self.cursor.execute(f"UPDATE attendances SET is_sent = TRUE WHERE id = {i[0]}")
-		else:
-			ds = self.cursor.execute("SELECT * From devices").fetchall()
-			for x in ds:
-				device = self.cursor.execute(f"SELECT * From devices WHERE id is '{x[0]}'").fetchone()
-				odoo_address = device[6]
-				
-				not_sent_attendances = self.cursor.execute(f"SELECT * From attendances WHERE is_sent is FALSE").fetchall()
-				
-				while len(not_sent_attendances) > batch:
-					ready_for_upload = not_sent_attendances[:batch]
-					not_sent_attendances = not_sent_attendances[batch:]
-					
-					data = {'attendances': ready_for_upload, "serial_number": device[3]}
-					data = json.dumps(data)
-					headers = {'content-type': 'application/json'}
-					response = requests.post(odoo_address, data=data, headers=headers)
-					
-					if response.status_code == 200:
-						
-						# TODO: Bulk update
-						for i in ready_for_upload:
-							self.cursor.execute(f"UPDATE attendances SET is_sent = TRUE WHERE id = {i[0]}")
-				
-
-
 		
+		device = self.cursor.execute(f"SELECT * From devices WHERE id is '{id}'").fetchone()
+		odoo_address = device[6]
+		
+		not_sent_attendances = self.cursor.execute(f"SELECT * From attendances WHERE is_sent is FALSE").fetchall()
+		
+		while len(not_sent_attendances) > batch:
+			ready_for_upload = not_sent_attendances[:batch]
+			not_sent_attendances = not_sent_attendances[batch:]
+			
+			data = {'attendances': ready_for_upload, "serial_number": device[3]}
+			data = json.dumps(data)
+			headers = {'content-type': 'application/json'}
+			response = requests.post(odoo_address, data=data, headers=headers)
+			
+			if response.status_code == 200:
+				print(response.json())
+				# TODO: Bulk update
+				for i in response.json()['result']:
+					self.cursor.execute(f"UPDATE attendances SET is_sent = TRUE WHERE id = {i}")
 
 
 class ZKTeco:

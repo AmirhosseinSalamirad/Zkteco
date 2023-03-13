@@ -49,56 +49,63 @@ def edit_device(db_obj, id, ip, port, password, timeout, odoo_endpoint, location
 
 	
 def upload_attendances(db_obj, id, batch):
-	db_obj.upload(id, batch)
+	if id:
+		db_obj.upload(id, batch)
+		
+	else:
+		all_devices = db_obj.get_all()
+		for device in all_devices:
+			db_obj.upload(device[0], batch)
 
 if __name__ == '__main__':
 	global_parser = argparse.ArgumentParser()
 	subparsers = global_parser.add_subparsers(dest="commands", help="arithmetic operations")
 	
-	add_device_parser = subparsers.add_parser("add_device", help="add a device to database")
+	add_device_parser = subparsers.add_parser("add-device", help="add a device to database")
 	add_device_parser.add_argument("--ip", required=True, action="store")
 	add_device_parser.add_argument("--port", default=4370, type=int, action="store")
 	add_device_parser.add_argument("--sn", required=True, action="store")
 	add_device_parser.add_argument("--timeout", default=5, action="store")
 	add_device_parser.add_argument("--password", default=0, action="store")
-	add_device_parser.add_argument("--odoo_endpoint", required=False, action="store")
+	add_device_parser.add_argument("--odoo-endpoint", required=False, action="store")
 	add_device_parser.add_argument("--location", required=True, action="store", help="comment")
 	
-	show_devices_parser = subparsers.add_parser("show_devices", help="show all devices in bash")
+	show_devices_parser = subparsers.add_parser("show-devices", help="show all devices in bash")
 	
-	delete_device_parser = subparsers.add_parser("delete_device", help="delete one device")
+	delete_device_parser = subparsers.add_parser("delete-device", help="delete one device")
 	delete_device_parser.add_argument("--id", required=True, action="store")
 	
-	get_device_parser = subparsers.add_parser("get_attendances", help="get attendances which are for specific device or all devices")
+	get_device_parser = subparsers.add_parser("get-attendances", help="get attendances which are for specific device or all devices")
 	get_device_parser.add_argument("--id", action="store")
 	
-	edit_device_parser = subparsers.add_parser("edit_device", help="edit a device")
+	edit_device_parser = subparsers.add_parser("edit-device", help="edit a device")
 	edit_device_parser.add_argument("--id", required=True, action="store")
 	edit_device_parser.add_argument("--ip", required=False, action="store")
 	edit_device_parser.add_argument("--port", required=False, action="store")
+	edit_device_parser.add_argument("--sn", required=False, action="store")
 	edit_device_parser.add_argument("--timeout", required=False, action="store")
 	edit_device_parser.add_argument("--password", required=False, action="store")
-	edit_device_parser.add_argument("--odoo_endpoint", required=False, action="store")
+	edit_device_parser.add_argument("--odoo-endpoint", required=False, action="store")
 	edit_device_parser.add_argument("--location", required=False, action="store")
 	
-	upload_attendances_parser = subparsers.add_parser("upload_attendances", help="store")
-	upload_attendances_parser.add_argument("--id", required=True, action="store")
+	upload_attendances_parser = subparsers.add_parser("upload-attendances", help="store")
+	upload_attendances_parser.add_argument("--id", required=False, action="store")
 	upload_attendances_parser.add_argument("--batch", "-b", required=False, type=int, default=50, action="store")
 	
 	db = DB()
 	
 	args = global_parser.parse_args()
 	
-	if args.commands == "add_device":
+	if args.commands == "add-device":
 		add_devices(db, args.ip, args.port, args.sn, args.password, args.timeout, args.odoo_endpoint, args.location)
 		
-	elif args.commands == "show_devices":
+	elif args.commands == "show-devices":
 		show_devices(db)
 	
-	elif args.commands == "delete_device":
+	elif args.commands == "delete-device":
 		delete_device(db, args.id)
 		
-	elif args.commands == "get_attendances":
+	elif args.commands == "get-attendances":
 		if args.id:
 			get_attendances(args.id)
 		else:
@@ -106,9 +113,9 @@ if __name__ == '__main__':
 			for device in all_devices:
 				get_attendances(device[0])
 	
-	elif args.commands == "edit_device":
+	elif args.commands == "edit-device":
 		edit_device(db, args.id, args.ip, args.port, args.password, args.timeout, args.odoo_endpoint, args.location)
 	
 	
-	elif args.commands == "upload_attendances":
+	elif args.commands == "upload-attendances":
 		upload_attendances(db, args.id, args.batch)
