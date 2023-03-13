@@ -4,8 +4,8 @@ import datetime
 import argparse
 
 
-def add_devices(db_obj, ip, port, password, timeout, location):
-	db_obj.add_devices(ip, port, password, timeout, location)
+def add_devices(db_obj, ip, sn, port, password, timeout, odoo_endpoint, location):
+	db_obj.add_devices(ip, sn, port, password, timeout, odoo_endpoint, location)
 
 
 def show_devices(db_obj):
@@ -24,7 +24,7 @@ def get_attendances(id):
 	ZKTeco_boj = ZKTeco()
 	
 	device = db.get_device(id)
-	ZKTeco_boj.create_connection(ip=device[1], port=device[2], password=device[3])
+	ZKTeco_boj.create_connection(ip=device[1], port=device[2], password=device[4])
 	
 	conn = None
 	try:
@@ -44,6 +44,13 @@ def get_attendances(id):
 		print("Process terminate : {}".format(e))
 
 
+def edit_device(db_obj, id, ip, port, password, timeout, odoo_endpoint, location):
+	db_obj.edit_device(id, ip, port, password, timeout, odoo_endpoint, location)
+
+	
+def upload_attendances(db_obj, id, batch):
+	db_obj.upload(id, batch)
+
 if __name__ == '__main__':
 	global_parser = argparse.ArgumentParser()
 	subparsers = global_parser.add_subparsers(dest="commands", help="arithmetic operations")
@@ -51,8 +58,10 @@ if __name__ == '__main__':
 	add_device_parser = subparsers.add_parser("add_device", help="add a device to database")
 	add_device_parser.add_argument("--ip", required=True, action="store")
 	add_device_parser.add_argument("--port", default=4370, type=int, action="store")
+	add_device_parser.add_argument("--sn", required=True, action="store")
 	add_device_parser.add_argument("--timeout", default=5, action="store")
 	add_device_parser.add_argument("--password", default=0, action="store")
+	add_device_parser.add_argument("--odoo_endpoint", required=False, action="store")
 	add_device_parser.add_argument("--location", required=True, action="store", help="comment")
 	
 	show_devices_parser = subparsers.add_parser("show_devices", help="show all devices in bash")
@@ -63,12 +72,25 @@ if __name__ == '__main__':
 	get_device_parser = subparsers.add_parser("get_attendances", help="get attendances which are for specific device or all devices")
 	get_device_parser.add_argument("--id", action="store")
 	
+	edit_device_parser = subparsers.add_parser("edit_device", help="edit a device")
+	edit_device_parser.add_argument("--id", required=True, action="store")
+	edit_device_parser.add_argument("--ip", required=False, action="store")
+	edit_device_parser.add_argument("--port", required=False, action="store")
+	edit_device_parser.add_argument("--timeout", required=False, action="store")
+	edit_device_parser.add_argument("--password", required=False, action="store")
+	edit_device_parser.add_argument("--odoo_endpoint", required=False, action="store")
+	edit_device_parser.add_argument("--location", required=False, action="store")
+	
+	upload_attendances_parser = subparsers.add_parser("upload_attendances", help="store")
+	upload_attendances_parser.add_argument("--id", required=True, action="store")
+	upload_attendances_parser.add_argument("--batch", "-b", required=False, type=int, default=50, action="store")
+	
 	db = DB()
 	
 	args = global_parser.parse_args()
 	
 	if args.commands == "add_device":
-		add_devices(db, args.ip, args.port, args.password, args.timeout, args.location)
+		add_devices(db, args.ip, args.port, args.sn, args.password, args.timeout, args.odoo_endpoint, args.location)
 		
 	elif args.commands == "show_devices":
 		show_devices(db)
@@ -83,3 +105,10 @@ if __name__ == '__main__':
 			all_devices = db.get_all()
 			for device in all_devices:
 				get_attendances(device[0])
+	
+	elif args.commands == "edit_device":
+		edit_device(db, args.id, args.ip, args.port, args.password, args.timeout, args.odoo_endpoint, args.location)
+	
+	
+	elif args.commands == "upload_attendances":
+		upload_attendances(db, args.id, args.batch)

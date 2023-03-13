@@ -1,3 +1,5 @@
+import json
+import requests
 import sqlite3
 from zk import ZK
 
@@ -30,8 +32,10 @@ class DB:
 								id       INTEGER PRIMARY KEY ASC AUTOINCREMENT NOT NULL,
 								ip       VARCHAR(50)                           NOT NULL,
 								port     INTEGER DEFAULT 4370                  NOT NULL,
+								serial_number     VARCHAR(255)                 NOT NULL,
 								password VARCHAR(50)                           NOT NULL,
 								timeout  INTEGER DEFAULT 5                     NOT NULL,
+								odoo_endpoint  VARCHAR(255)							   ,
 								location VARCHAR(255)
 							);""")
 	
@@ -45,8 +49,8 @@ class DB:
 	def get_device(self, id):
 		return self.cursor.execute(f"SELECT * From devices WHERE id is '{id}'").fetchone()
 	
-	def add_devices(self, ip, port, password, timeout, location):
-		self.cursor.execute("INSERT INTO devices(ip, port, password, timeout, location) VALUES (?, ?, ?, ?, ?)", (ip, port, password, timeout, location))
+	def add_devices(self, ip, port, sn, password, timeout, odoo_endpoint,location):
+		self.cursor.execute("INSERT INTO devices(ip, port, serial_number, password, timeout,odoo_endpoint, location) VALUES (?, ?, ?, ?, ?,?, ?)", (ip, port, sn, password, timeout, odoo_endpoint, location))
 		self.connection.commit()
 	
 	def get_last_data(self, table_name, order_by_with, device_id):
@@ -65,6 +69,70 @@ class DB:
 	def add_to_table_attendance(self, data, device_id):
 		q = f"INSERT INTO attendances(user_id, day_time, punch, status, device_id) VALUES (?, ?, ?, ?,{device_id})"
 		self.execute(q, data, len(data) > 1)
+	
+	def edit_device(self, id, ip, port, password, timeout, odoo_endpoint, location):
+		if ip:
+			self.cursor.execute(f"UPDATE devices SET ip = {ip} WHERE id = {id}")
+		elif port:
+			self.cursor.execute(f"UPDATE devices SET port = {port} WHERE id = {id}")
+		elif password:
+			self.cursor.execute(f"UPDATE devices SET password = {password} WHERE id = {id}")
+		elif timeout:
+			self.cursor.execute(f"UPDATE devices SET timeout = {timeout} WHERE id = {id}")
+		elif odoo_endpoint:
+			self.cursor.execute(f"UPDATE devices SET odoo_endpoint = {odoo_endpoint} WHERE id = {id}")
+		elif location:
+			self.cursor.execute(f"UPDATE devices SET location = {location} WHERE id = {id}")
+		self.connection.commit()
+	
+	def upload(self, id, batch):
+		if id:
+			device = self.cursor.execute(f"SELECT * From devices WHERE id is '{id}'").fetchone()
+			odoo_address = device[6]
+			
+			not_sent_attendances = self.cursor.execute(f"SELECT * From attendances WHERE is_sent is FALSE").fetchall()
+	
+			while len(not_sent_attendances) > batch:
+				ready_for_upload = not_sent_attendances[:batch]
+				not_sent_attendances = not_sent_attendances[batch:]
+				
+				
+				data = {'attendances': ready_for_upload, "serial_number": device[3]}
+				data = json.dumps(data)
+				headers = {'content-type': 'application/json'}
+				response = requests.post(odoo_address, data=data, headers=headers)
+				
+				if response.status_code == 200:
+	
+					# TODO: Bulk update
+					for i in ready_for_upload:
+						self.cursor.execute(f"UPDATE attendances SET is_sent = TRUE WHERE id = {i[0]}")
+		else:
+			ds = self.cursor.execute("SELECT * From devices").fetchall()
+			for x in ds:
+				device = self.cursor.execute(f"SELECT * From devices WHERE id is '{x[0]}'").fetchone()
+				odoo_address = device[6]
+				
+				not_sent_attendances = self.cursor.execute(f"SELECT * From attendances WHERE is_sent is FALSE").fetchall()
+				
+				while len(not_sent_attendances) > batch:
+					ready_for_upload = not_sent_attendances[:batch]
+					not_sent_attendances = not_sent_attendances[batch:]
+					
+					data = {'attendances': ready_for_upload, "serial_number": device[3]}
+					data = json.dumps(data)
+					headers = {'content-type': 'application/json'}
+					response = requests.post(odoo_address, data=data, headers=headers)
+					
+					if response.status_code == 200:
+						
+						# TODO: Bulk update
+						for i in ready_for_upload:
+							self.cursor.execute(f"UPDATE attendances SET is_sent = TRUE WHERE id = {i[0]}")
+				
+
+
+		
 
 
 class ZKTeco:

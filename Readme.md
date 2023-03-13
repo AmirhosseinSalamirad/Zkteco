@@ -10,7 +10,7 @@ First, go to the `ZKTeco` directory.
 `python main.py show_devices`
 
 
-### For show delete a device:
+### For delete a device:
 `python main.py delete_device --id ID`
 
 
