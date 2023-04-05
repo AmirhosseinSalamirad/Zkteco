@@ -117,6 +117,7 @@ class DB:
 				response.raise_for_status()
 			except:
 				print(f"{response.status_code}: {response.text}")
+				continue
 
 			response_data = response.json()
 
