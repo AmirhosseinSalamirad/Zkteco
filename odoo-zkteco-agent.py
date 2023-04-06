@@ -118,7 +118,11 @@ class DB:
 		device = self.cursor.execute(f"SELECT * From devices WHERE id = ?", (id,)).fetchone()
 		odoo_address = device[6]
 
-		not_sent_attendances = self.cursor.execute(f"SELECT * From attendances WHERE is_sent is FALSE").fetchall()
+		if not odoo_address:
+			logging.error(f"device {device[0]} ({device[7]}) has no Odoo Address, Ignoring.")
+			return
+
+		not_sent_attendances = self.cursor.execute(f"SELECT * From attendances WHERE is_sent is FALSE AND device_id =  ?", (id,)).fetchall()
 
 		total = len(not_sent_attendances)
 		saved = 0
@@ -138,6 +142,10 @@ class DB:
 				continue
 
 			response_data = response.json()
+
+			if "error" in response_data['result']:
+				logging.error(f"{response_data['result']['error']}")
+				return
 
 			if "success-list" in response_data['result'] and response_data['result']["success-list"]:
 				placeholders = ','.join(['?'] * len(response_data['result']["success-list"]))
