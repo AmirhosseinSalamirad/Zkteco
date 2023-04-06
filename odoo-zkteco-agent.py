@@ -1,6 +1,8 @@
+#!/bin/env python3
 import argparse
 import datetime
 import json
+import logging
 import sqlite3
 
 import requests
@@ -11,10 +13,12 @@ from zk import ZK
 For more information go to gitlab.com/scarfbank/odoo/zkteco
 """
 
+__version__ = "1.2.0"
+
 
 class DB:
-	def __init__(self):
-		self.connection = sqlite3.connect("ZKTeco.sqlite")
+	def __init__(self, db_path):
+		self.connection = sqlite3.connect(db_path)
 		self.cursor = self.connection.cursor()
 		self._create_devices_table()
 		self._create_attendances_table()
@@ -65,6 +69,13 @@ class DB:
 		if not t:
 			return False
 		return t
+
+	def count_device_attendances(self, device_id):
+		total = self.cursor.execute(f"SELECT count(id) FROM attendances WHERE device_id = ?", (device_id,)).fetchone()
+		send = self.cursor.execute(f"SELECT count(id) FROM attendances WHERE device_id = ? AND is_sent = True;", (device_id,)).fetchone()
+		not_sent = self.cursor.execute(f"SELECT count(id) FROM attendances WHERE device_id = ? AND is_sent = False;", (device_id,)).fetchone()
+
+		return total[0], send[0], not_sent[0]
 
 	def execute(self, query, data, many=False):
 		if many:
@@ -123,7 +134,7 @@ class DB:
 			try:
 				response.raise_for_status()
 			except:
-				print(f"{response.status_code}: {response.text}")
+				logging.error(f"{response.status_code}: {response.text}")
 				continue
 
 			response_data = response.json()
@@ -145,8 +156,8 @@ class DB:
 
 			self.connection.commit()
 
-		print(f"{saved}/{total} attendances of device {device[0]} Successfully loaded to Odoo {odoo_address}")
-		print(f"Set `ID on Biometric Device` for your employees with this ids (on device): {missing_employee}")
+		logging.info(f"{saved}/{total} attendances of device {device[0]} ({device[7]}) Successfully loaded to Odoo {odoo_address}")
+		logging.info(f"Set `ID on Biometric Device` for your employees with this ids (on device): {missing_employee}")
 
 
 class ZKTeco:
@@ -169,7 +180,7 @@ class ZKTeco:
 			attendances = self.connection.get_attendance()
 			return [(a.user_id, a.timestamp, a.punch, a.status) for a in attendances]
 		except Exception as e:
-			print("Process terminate : {}".format(e))
+			logging.error("Process terminate : {}".format(e))
 		finally:
 			if self.connection:
 				# re-enable device after all commands already executed
@@ -182,9 +193,10 @@ def add_devices(db_obj, ip, sn, port, password, timeout, odoo_endpoint, comment)
 
 def show_devices(db_obj):
 	all_devices = db_obj.get_all()
+	final_device_data = [device + db_obj.count_device_attendances(device[0]) for device in all_devices]
 	table = PrettyTable()
-	table.field_names = ["ID", "IP", "Port", "Serial Number", "Password", "Timeout", "Odoo Endpoint", "Comment", ]
-	table.add_rows(all_devices)
+	table.field_names = ["ID", "IP", "Port", "Serial Number", "Password", "Timeout", "Odoo Endpoint", "Comment", "Total Records", "Uploaded", "Not Uploaded"]
+	table.add_rows(final_device_data)
 	print(table)
 
 
@@ -203,15 +215,16 @@ def get_attendances(id):
 		last = db.get_last_data('attendances', 'day_time', device[0])
 		if not last:
 			db.add_to_table_attendance(attendances, device[0])
-			print(f"{len(attendances)} attendances loaded to database from device {id}")
-
+			logging.info(f"{len(attendances)} attendances loaded to database from device {id} ({device[7]})")
 		else:
 			l = list(filter(lambda x: x[1] > datetime.datetime.strptime(last[0][2], "%Y-%m-%d %H:%M:%S"), attendances))
 			if l:
 				db.add_to_table_attendance(l, device[0])
-				print(f"{len(l)} attendances loaded to database from device {id}")
+				logging.info(f"{len(l)} attendances loaded to database from device {id} ({device[7]})")
+			else:
+				logging.info(f"No new data from device {id} ({device[7]})")
 	except Exception as e:
-		print("Process terminate : {}".format(e))
+		logging.error("Process terminate : {}".format(e))
 
 
 def edit_device(db_obj, id, ip, port, password, timeout, odoo_endpoint, comment):
@@ -230,6 +243,8 @@ def upload_attendances(db_obj, id, batch):
 
 if __name__ == '__main__':
 	global_parser = argparse.ArgumentParser()
+	global_parser.add_argument("-d", "--database", default="zkteco.sqlite3", type=str)
+	global_parser.add_argument('-v', '--verbose', action='count', default=0, help="verbosity, add more `V` for more information")
 	subparsers = global_parser.add_subparsers(dest="commands", help="Odoo - ZKTeco synchronization tool")
 
 	add_device_parser = subparsers.add_parser("add-device", help="Add a device to database")
@@ -259,13 +274,16 @@ if __name__ == '__main__':
 	get_device_parser = subparsers.add_parser("get-attendances", help="Get attendances from specific device or all devices")
 	get_device_parser.add_argument("--id", "-i", action="store")
 
-	upload_attendances_parser = subparsers.add_parser("upload-attendances", help="Upload attendances to Odoo")
+	upload_attendances_parser = subparsers.add_parser("upload", help="Upload attendances to Odoo")
 	upload_attendances_parser.add_argument("--id", "-i", required=False, action="store")
 	upload_attendances_parser.add_argument("--batch", "-b", required=False, type=int, default=50, action="store")
 
-	db = DB()
-
 	args = global_parser.parse_args()
+
+	log_level = max(logging.WARNING - args.verbose * 10, logging.DEBUG)
+	logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s:%(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+	db = DB(args.database)
 
 	if args.commands == "add-device":
 		add_devices(db, args.ip, args.port, args.sn, args.password, args.timeout, args.odoo_endpoint, args.comment)
@@ -276,6 +294,9 @@ if __name__ == '__main__':
 	elif args.commands == "delete-device":
 		delete_device(db, args.id)
 
+	elif args.commands == "edit-device":
+		edit_device(db, args.id, args.ip, args.port, args.password, args.timeout, args.odoo_endpoint, args.comment)
+
 	elif args.commands == "get-attendances":
 		if args.id:
 			get_attendances(args.id)
@@ -284,8 +305,5 @@ if __name__ == '__main__':
 			for device in all_devices:
 				get_attendances(device[0])
 
-	elif args.commands == "edit-device":
-		edit_device(db, args.id, args.ip, args.port, args.password, args.timeout, args.odoo_endpoint, args.comment)
-
-	elif args.commands == "upload-attendances":
+	elif args.commands == "upload":
 		upload_attendances(db, args.id, args.batch)
