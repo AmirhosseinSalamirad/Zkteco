@@ -150,7 +150,7 @@ class DB:
 			if "success-list" in response_data['result'] and response_data['result']["success-list"]:
 				placeholders = ','.join(['?'] * len(response_data['result']["success-list"]))
 				query = f"UPDATE attendances SET is_sent = TRUE WHERE id IN ({placeholders})"
-				# self.cursor.execute(query, response_data['result']["success-list"])
+				self.cursor.execute(query, response_data['result']["success-list"])
 				saved += len(response_data['result']["success-list"])
 
 			if "duplicate-list" in response_data['result'] and response_data['result']["duplicate-list"]:
@@ -165,7 +165,7 @@ class DB:
 			self.connection.commit()
 
 		logging.info(f"{saved}/{total} attendances of device {device[0]} ({device[7]}) Successfully loaded to Odoo {odoo_address}")
-		logging.info(f"Set `ID on Biometric Device` for your employees with this ids (on device): {missing_employee}")
+		logging.info(f"Set `ID on Biometric Device` for your employees with this ids (on device): {list(set(missing_employee))}")
 
 
 class ZKTeco:

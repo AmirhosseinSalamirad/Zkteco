@@ -60,7 +60,7 @@ Device List:
   SET is_sent = TRUE
   where is_sent = False
     and device_id = 1
-    and user_id in (1, 225, 71, 72, 201, 75, 203, 78, 207, 209, 210, 50, 56, 251);
+    and user_id in (72, 1, 56, 71);
    ```
 
 4. Create a cron job for fetching new attendances and uploading them to Odoo
