@@ -138,13 +138,13 @@ class DB:
 			try:
 				response.raise_for_status()
 			except:
-				logging.error(f"{response.status_code}: {response.text}")
+				logging.error(f"device {device[0]} ({device[7]}): {response.status_code}: {response.text}")
 				continue
 
 			response_data = response.json()
 
 			if "error" in response_data['result']:
-				logging.error(f"{response_data['result']['error']}")
+				logging.error(f"device {device[0]} ({device[7]}): {response_data['result']['error']}")
 				return
 
 			if "success-list" in response_data['result'] and response_data['result']["success-list"]:
