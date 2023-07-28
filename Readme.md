@@ -1,3 +1,4 @@
+#Tested By Amirhossein Salamirad
 # Connecting to ZKTeco devices
 
 First, go to the `ZKTeco` directory.
@@ -68,4 +69,3 @@ Device List:
    ```shell
    30 */4 * * * /opt/odoo-zkteco-agent/odoo-zkteco-agent.py --database /opt/odoo-zkteco-agent/zkteco.sqlite3 get-attendances; /opt/odoo-zkteco-agent/odoo-zkteco-agent.py --database /opt/odoo-zkteco-agent/zkteco.sqlite3 upload --id 1;
    ```
-5. 
