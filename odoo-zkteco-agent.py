@@ -15,6 +15,10 @@ For more information go to gitlab.com/scarfbank/odoo/zkteco
 
 __version__ = "1.2.0"
 
+"""
+ORM -> DB
+	SQLAlchemy
+"""
 
 class DB:
 	def __init__(self, db_path):

@@ -1,4 +1,25 @@
-#Tested By Amirhossein Salamirad
+# Tested By Amirhossein Salamirad
+
+## Tasks
+
+1. django admin class 
+2. relation in djnago admin
+   1. Inline Class
+   2. list filter
+      - date time
+3. Commands
+   1. Get attendances
+   2. Upload
+4. Django admin Action
+   1. Get Attendances
+   2. Upload
+   3. Update User in Device
+5. View for aut data
+
+- Create missing users
+- 
+
+
 # Connecting to ZKTeco devices
 
 First, go to the `ZKTeco` directory.
@@ -53,15 +74,15 @@ Device List:
   ```sqlite
   UPDATE attendances
   SET is_sent = TRUE
-      -- 2023-03-21 is 1402-01-01
+	  -- 2023-03-21 is 1402-01-01
   where date(day_time) < date('2023-03-21')
-    and device_id = 1;
+	and device_id = 1;
 
-  UPDATE attendances
-  SET is_sent = TRUE
-  where is_sent = False
-    and device_id = 1
-    and user_id in (72, 1, 56, 71);
+UPDATE attendances
+SET is_sent = TRUE
+where is_sent = False
+  and device_id = 1
+  and user_id in (72, 1, 56, 71);
    ```
 
 4. Create a cron job for fetching new attendances and uploading them to Odoo
