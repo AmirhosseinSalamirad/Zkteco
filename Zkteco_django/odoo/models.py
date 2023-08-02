@@ -3,7 +3,7 @@ from django.utils import timezone
 
 
 # Create your models here.
-class Devices(models.Model):
+class Device(models.Model):
 	ip = models.GenericIPAddressField()
 	port = models.IntegerField(default=4370)
 	serial_number = models.CharField(max_length=255)
@@ -18,7 +18,7 @@ class Devices(models.Model):
 		return f"Device {self.pk} with the port {self.port}"
 
 
-class OdooInstances(models.Model):
+class OdooInstance(models.Model):
 	name = models.CharField(max_length=255)
 	endpoint = models.TextField()
 	timeout = models.IntegerField(default=60)
@@ -32,27 +32,28 @@ class OdooInstances(models.Model):
 		return str(self.pk)
 
 
-class DeviceUsers(models.Model):
+class DeviceUser(models.Model):
+
 	name = models.CharField(max_length=255)
 	image = models.ImageField(null=True, blank=True)
 	device_id = models.IntegerField()
-	devices = models.ManyToManyField(Devices)
-	instances = models.ManyToManyField(OdooInstances)
+	devices = models.ManyToManyField(Device)
+	instances = models.ForeignKey(OdooInstance, models.PROTECT)
 
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
-		return self.name
+		return str(self.pk)
 
 
-class Attendances(models.Model):
-	user_id = models.ForeignKey(DeviceUsers, on_delete=models.PROTECT)
+class Attendance(models.Model):
+	user_id = models.ForeignKey(DeviceUser, on_delete=models.PROTECT)
 	day_time = models.DateTimeField()
 	punch = models.IntegerField()
 	status = models.IntegerField()
 	is_sent = models.BooleanField(default=False)
-	device_id = models.ForeignKey(Devices, on_delete=models.PROTECT)
+	device_id = models.ForeignKey(Device, on_delete=models.PROTECT)
 
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)

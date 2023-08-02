@@ -1,17 +1,47 @@
 from django.contrib import admin
-from .models import Attendances, Devices, DeviceUsers, OdooInstances
+from .models import Attendance, Device, DeviceUser, OdooInstance
+
 
 # Register your models here.
-admin.site.register(Attendances)
-admin.site.register(DeviceUsers)
-admin.site.register(OdooInstances)
+
+class AttendanceInline(admin.TabularInline):  # Use `admin.StackedInline` for a stacked layout instead of tabular.
+	model = Attendance
 
 
-@admin.register(Devices)
+@admin.register(Attendance)
+class AttendanceAdmin(admin.ModelAdmin):
+	save_on_top = True
+	save_as = True
+	list_display = ['user_id', 'day_time', 'device_id', 'punch']
+	search_fields = ['user_id__id', 'day_time', 'device_id__port', 'device_id__ip']
+	list_filter = ['user_id', 'device_id', 'status', 'is_sent', 'updated_at', 'created_at']
+	readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(DeviceUser)
+class DeviceUserAdmin(admin.ModelAdmin):
+	inlines = [AttendanceInline]
+	save_on_top = True
+	save_as = True
+	list_display = ['name', 'image']
+	search_fields = ['name', 'devices__ip', 'devices__port']
+	list_filter = ['updated_at', 'created_at', 'devices']
+
+
+@admin.register(OdooInstance)
+class OdooInstanceAdmin(admin.ModelAdmin):
+	save_on_top = True
+	save_as = True
+	list_display = ['name', 'endpoint']
+	search_fields = ['name', 'endpoint']
+	list_filter = ['updated_at', 'created_at']
+
+
+@admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
+	inlines = [AttendanceInline]
 	save_on_top = True
 	save_as = True
 	list_display = ['ip', 'port']
-	search_fields = []
-	list_filter = []
-
+	search_fields = ['ip', 'port']
+	list_filter = ['updated_at', 'created_at']

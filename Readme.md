@@ -2,14 +2,15 @@
 
 ## Tasks
 
-1. django admin class 
+1. django admin class: Done 
 2. relation in djnago admin
-   1. Inline Class
-   2. list filter
-      - date time
+   1. Inline Class : Done
+   2. list_filter : Done
+      - date time #?!
+   3. search_field : Done
 3. Commands
-   1. Get attendances
-   2. Upload
+   1. Get attendances --> Done (Please check it Heshmat jan)
+   2. Upload --> requires further elaboration
 4. Django admin Action
    1. Get Attendances
    2. Upload
@@ -17,7 +18,7 @@
 5. View for aut data
 
 - Create missing users
-- 
+- Let's have a meeting later regarding the django code exploration
 
 
 # Connecting to ZKTeco devices
