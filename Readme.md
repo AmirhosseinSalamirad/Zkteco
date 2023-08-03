@@ -10,7 +10,7 @@
    3. search_field : Done
 3. Commands
    1. Get attendances --> Done (Please check it Heshmat jan)
-   2. Upload --> requires further elaboration
+   2. Upload --> Done (Please check it Heshmat Jan)
 4. Django admin Action
    1. Get Attendances
    2. Upload

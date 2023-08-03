@@ -38,7 +38,7 @@ class DeviceUser(models.Model):
 	image = models.ImageField(null=True, blank=True)
 	device_id = models.IntegerField()
 	devices = models.ManyToManyField(Device)
-	instances = models.ForeignKey(OdooInstance, models.PROTECT)
+	instance = models.ForeignKey(OdooInstance, models.PROTECT)
 
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)

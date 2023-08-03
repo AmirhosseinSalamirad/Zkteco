@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from Zkteco_django.odoo.models import Device
-from Zkteco_django.upload_attendances import UploadAttendance
+from odoo.models import Device
+from upload_attendances import UploadAttendance
 
 
 class Command(BaseCommand):
