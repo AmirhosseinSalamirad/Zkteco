@@ -2,20 +2,20 @@
 
 ## Tasks
 
-1. django admin class: Done 
-2. relation in djnago admin
-   1. Inline Class : Done
-   2. list_filter : Done
+* [x] django admin class: 
+* [x] Relation in djnago admin
+   * [ ] Inline Class :
+   * [x] list_filter :
       - date time #?!
-   3. search_field : Done
-3. Commands
-   1. Get attendances --> Done (Please check it Heshmat jan)
-   2. Upload --> Done (Please check it Heshmat Jan)
-4. Django admin Action
-   1. Get Attendances
-   2. Upload
-   3. Update User in Device
-5. View for aut data
+   * [x] search_field :
+* [x] Commands
+   * [x] Get attendances --> Done (Please check it Heshmat jan)
+   * [x] Upload --> Done (Please check it Heshmat Jan)
+* [ ] Django admin Action
+   * [ ] Get Attendances
+   * [ ] Upload
+   * [ ] Update User in Device
+* [ ] View for auto data
 
 - Create missing users
 - Let's have a meeting later regarding the django code exploration

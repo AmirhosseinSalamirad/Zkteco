@@ -14,7 +14,7 @@ class AttendanceAdmin(admin.ModelAdmin):
 	save_as = True
 	list_display = ['user_id', 'day_time', 'device_id', 'punch']
 	search_fields = ['user_id__id', 'day_time', 'device_id__port', 'device_id__ip']
-	list_filter = ['user_id', 'device_id', 'status', 'is_sent', 'updated_at', 'created_at']
+	list_filter = ['is_sent', 'created_at', 'user_id', 'device_id', 'status', ]
 	readonly_fields = ('created_at', 'updated_at')
 
 
@@ -25,7 +25,7 @@ class DeviceUserAdmin(admin.ModelAdmin):
 	save_as = True
 	list_display = ['name', 'image']
 	search_fields = ['name', 'devices__ip', 'devices__port']
-	list_filter = ['updated_at', 'created_at', 'devices']
+	list_filter = ['created_at', 'devices']
 
 
 @admin.register(OdooInstance)
