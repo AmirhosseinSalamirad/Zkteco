@@ -23,7 +23,7 @@ class DeviceUserAdmin(admin.ModelAdmin):
 	inlines = [AttendanceInline]
 	save_on_top = True
 	save_as = True
-	list_display = ['name', 'image']
+	list_display = ['name', 'instance']
 	search_fields = ['name', 'devices__ip', 'devices__port']
 	list_filter = ['updated_at', 'created_at', 'devices']
 
@@ -32,7 +32,7 @@ class DeviceUserAdmin(admin.ModelAdmin):
 class OdooInstanceAdmin(admin.ModelAdmin):
 	save_on_top = True
 	save_as = True
-	list_display = ['name', 'endpoint']
+	list_display = ['name']
 	search_fields = ['name', 'endpoint']
 	list_filter = ['updated_at', 'created_at']
 

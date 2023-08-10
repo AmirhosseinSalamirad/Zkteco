@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from odoo.models import Device
-from upload_attendances import UploadAttendance
+from odoo.models import Device, Attendance
 
 
 class Command(BaseCommand):
@@ -14,9 +13,10 @@ class Command(BaseCommand):
 		#batch = options['batch']
 
 		if id:
-			UploadAttendance(id)
+			Attendance.objects.get_attendance(id)
 
 		else:
 			all_devices = Device.objects.all()
 			for device in all_devices:
-				UploadAttendance(device.id)
+				# UploadAttendance(device.id)
+				Attendance.objects.get_attendance(device.id)
